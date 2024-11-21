@@ -1,5 +1,23 @@
 # @react-email/render
 
+## 1.0.3-canary.2
+
+### Patch Changes
+
+- 2ebf17f: Use prettier's stadalone API instead of js-beautify
+
+## 1.0.3-canary.1
+
+### Patch Changes
+
+- 0f32e50: Remove uncessary destructuring of react-dom/server
+
+## 1.0.3-canary.0
+
+### Patch Changes
+
+- f7833da: Move react and react-dom to just dependencies for better DX
+
 ## 1.0.2
 
 ### Patch Changes

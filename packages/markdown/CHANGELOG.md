@@ -1,5 +1,17 @@
 # @react-email/markdown
 
+## 0.0.13-canary.1
+
+### Patch Changes
+
+- e48e1a0: Fixes `fontWeight` styles erroring when using numbers
+
+## 0.0.13-canary.0
+
+### Patch Changes
+
+- f7833da: Move react and react-dom to just dependencies for better DX
+
 ## 0.0.12
 
 ### Patch Changes

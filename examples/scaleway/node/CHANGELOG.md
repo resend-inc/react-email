@@ -1,5 +1,30 @@
 # react-email-with-node-scaleway
 
+## 1.0.4-canary.3
+
+### Patch Changes
+
+- @react-email/components@0.0.29-canary.3
+
+## 1.0.4-canary.2
+
+### Patch Changes
+
+- @react-email/components@0.0.29-canary.2
+
+## 1.0.4-canary.1
+
+### Patch Changes
+
+- @react-email/components@0.0.29-canary.1
+
+## 1.0.4-canary.0
+
+### Patch Changes
+
+- Updated dependencies [f7833da]
+  - @react-email/components@0.0.29-canary.0
+
 ## 1.0.3
 
 ### Patch Changes
