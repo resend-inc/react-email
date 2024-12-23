@@ -10,6 +10,10 @@ import { Shell } from '../../../components/shell';
 import { Tooltip } from '../../../components/tooltip';
 import { useEmails } from '../../../contexts/emails';
 import { useRenderingMetadata } from '../../../hooks/use-rendering-metadata';
+import {
+  makeIframeDocumentBubbleEvents,
+  ResizableWarpper,
+} from '../../../components/resizable-wrapper';
 import { RenderingError } from './rendering-error';
 
 interface PreviewProps {
@@ -77,7 +81,7 @@ const Preview = ({
   const hasNoErrors = typeof renderedEmailMetadata !== 'undefined';
 
   const [width, setWidth] = useState(600);
-  const [height, setHeight] = useState(812);
+  const [height, setHeight] = useState(1024);
 
   return (
     <Shell
@@ -101,15 +105,41 @@ const Preview = ({
         {hasNoErrors ? (
           <>
             {activeView === 'preview' && (
-              <iframe
-                className="bg-white mx-auto my-auto rounded-lg max-h-full"
-                srcDoc={renderedEmailMetadata.markup}
-                style={{
-                  width: `${width}px`,
-                  height: `${height}px`,
+              <ResizableWarpper
+                height={height}
+                onResize={(difference, direction) => {
+                  switch (direction) {
+                    case 'north':
+                      setHeight((h) => h + 2 * difference);
+                      break;
+                    case 'south':
+                      setHeight((h) => h + 2 * difference);
+                      break;
+                    case 'east':
+                      setWidth((w) => w + 2 * difference);
+                      break;
+                    case 'west':
+                      setWidth((w) => w + 2 * difference);
+                      break;
+                  }
                 }}
-                title={slug}
-              />
+                width={width}
+              >
+                <iframe
+                  className="bg-white rounded-lg max-h-full"
+                  ref={(iframe) => {
+                    if (iframe) {
+                      return makeIframeDocumentBubbleEvents(iframe);
+                    }
+                  }}
+                  srcDoc={renderedEmailMetadata.markup}
+                  style={{
+                    width: `${width}px`,
+                    height: `${height}px`,
+                  }}
+                  title={slug}
+                />
+              </ResizableWarpper>
             )}
 
             {activeView === 'source' && (
