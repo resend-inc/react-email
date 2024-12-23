@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 import { Toaster } from 'sonner';
 import { useHotreload } from '../../../hooks/use-hot-reload';
 import type { EmailRenderingResult } from '../../../actions/render-email-by-path';
@@ -14,6 +13,7 @@ import {
   makeIframeDocumentBubbleEvents,
   ResizableWarpper,
 } from '../../../components/resizable-wrapper';
+import { useClampedState } from '../../../hooks/use-clamped-state';
 import { RenderingError } from './rendering-error';
 
 interface PreviewProps {
@@ -80,8 +80,12 @@ const Preview = ({
 
   const hasNoErrors = typeof renderedEmailMetadata !== 'undefined';
 
-  const [width, setWidth] = useState(600);
-  const [height, setHeight] = useState(1024);
+  const [width, setWidth] = useClampedState(600, 350, Number.POSITIVE_INFINITY);
+  const [height, setHeight] = useClampedState(
+    1024,
+    600,
+    Number.POSITIVE_INFINITY,
+  );
 
   return (
     <Shell
