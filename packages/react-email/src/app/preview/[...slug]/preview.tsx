@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import React from 'react';
 import { Toaster } from 'sonner';
 import { useHotreload } from '../../../hooks/use-hot-reload';
 import type { EmailRenderingResult } from '../../../actions/render-email-by-path';
@@ -10,6 +9,11 @@ import { Shell } from '../../../components/shell';
 import { Tooltip } from '../../../components/tooltip';
 import { useEmails } from '../../../contexts/emails';
 import { useRenderingMetadata } from '../../../hooks/use-rendering-metadata';
+import {
+  makeIframeDocumentBubbleEvents,
+  ResizableWarpper,
+} from '../../../components/resizable-wrapper';
+import { useClampedState } from '../../../hooks/use-clamped-state';
 import { RenderingError } from './rendering-error';
 
 interface PreviewProps {
@@ -29,7 +33,7 @@ const Preview = ({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const activeView = searchParams.get('view') ?? 'desktop';
+  const activeView = searchParams.get('view') ?? 'preview';
   const activeLang = searchParams.get('lang') ?? 'jsx';
   const { useEmailRenderingResult } = useEmails();
 
@@ -76,16 +80,27 @@ const Preview = ({
 
   const hasNoErrors = typeof renderedEmailMetadata !== 'undefined';
 
+  const [width, setWidth] = useClampedState(600, 350, Number.POSITIVE_INFINITY);
+  const [height, setHeight] = useClampedState(
+    1024,
+    600,
+    Number.POSITIVE_INFINITY,
+  );
+
   return (
     <Shell
-      activeView={hasNoErrors ? activeView : undefined}
+      activeView={activeView}
       currentEmailOpenSlug={slug}
       markup={renderedEmailMetadata?.markup}
       pathSeparator={pathSeparator}
-      setActiveView={hasNoErrors ? handleViewChange : undefined}
+      setActiveView={handleViewChange}
+      setViewHeight={setHeight}
+      setViewWidth={setWidth}
+      viewHeight={height}
+      viewWidth={width}
     >
       {/* This relative is so that when there is any error the user can still switch between emails */}
-      <div className="relative h-full">
+      <div className="relative h-full flex">
         {'error' in renderingResult ? (
           <RenderingError error={renderingResult.error} />
         ) : null}
@@ -93,20 +108,42 @@ const Preview = ({
         {/* If this is undefined means that the initial server render of the email had errors */}
         {hasNoErrors ? (
           <>
-            {activeView === 'desktop' && (
-              <iframe
-                className="w-full bg-white h-[calc(100vh_-_140px)] lg:h-[calc(100vh_-_70px)]"
-                srcDoc={renderedEmailMetadata.markup}
-                title={slug}
-              />
-            )}
-
-            {activeView === 'mobile' && (
-              <iframe
-                className="w-[360px] bg-white h-[calc(100vh_-_140px)] lg:h-[calc(100vh_-_70px)] mx-auto"
-                srcDoc={renderedEmailMetadata.markup}
-                title={slug}
-              />
+            {activeView === 'preview' && (
+              <ResizableWarpper
+                height={height}
+                onResize={(difference, direction) => {
+                  switch (direction) {
+                    case 'north':
+                      setHeight((h) => h + 2 * difference);
+                      break;
+                    case 'south':
+                      setHeight((h) => h + 2 * difference);
+                      break;
+                    case 'east':
+                      setWidth((w) => w + 2 * difference);
+                      break;
+                    case 'west':
+                      setWidth((w) => w + 2 * difference);
+                      break;
+                  }
+                }}
+                width={width}
+              >
+                <iframe
+                  className="bg-white rounded-lg max-h-full"
+                  ref={(iframe) => {
+                    if (iframe) {
+                      return makeIframeDocumentBubbleEvents(iframe);
+                    }
+                  }}
+                  srcDoc={renderedEmailMetadata.markup}
+                  style={{
+                    width: `${width}px`,
+                    height: `${height}px`,
+                  }}
+                  title={slug}
+                />
+              </ResizableWarpper>
             )}
 
             {activeView === 'source' && (

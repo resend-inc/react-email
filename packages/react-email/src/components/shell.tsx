@@ -11,8 +11,14 @@ interface ShellProps extends RootProps {
   markup?: string;
   currentEmailOpenSlug?: string;
   pathSeparator?: string;
+
   activeView?: string;
   setActiveView?: (view: string) => void;
+
+  viewWidth?: number;
+  setViewWidth?: (width: number) => void;
+  viewHeight?: number;
+  setViewHeight?: (height: number) => void;
 }
 
 export const Shell = ({
@@ -22,6 +28,10 @@ export const Shell = ({
   markup,
   activeView,
   setActiveView,
+  viewHeight,
+  viewWidth,
+  setViewHeight,
+  setViewWidth,
 }: ShellProps) => {
   const [sidebarToggled, setSidebarToggled] = React.useState(false);
   const [triggerTransition, setTriggerTransition] = React.useState(false);
@@ -105,6 +115,10 @@ export const Shell = ({
               }}
               pathSeparator={pathSeparator}
               setActiveView={setActiveView}
+              setViewHeight={setViewHeight}
+              setViewWidth={setViewWidth}
+              viewHeight={viewHeight}
+              viewWidth={viewWidth}
             />
           ) : null}
 
