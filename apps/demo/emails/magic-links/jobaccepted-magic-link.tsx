@@ -9,8 +9,8 @@ import {
   Preview,
   Section,
   Text,
-} from '@react-email/components';
-import { setupForPreview } from "react-email/src/package";
+} from "@react-email/components";
+import { setupForPreview } from "react-email";
 
 interface MagicCodeEmailProps {
   code: string;
