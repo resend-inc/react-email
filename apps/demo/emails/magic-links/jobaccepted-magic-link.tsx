@@ -9,8 +9,8 @@ import {
   Preview,
   Section,
   Text,
-} from "@react-email/components";
-import { setupForPreview } from "react-email";
+} from '@react-email/components';
+import { setupForPreview } from 'react-email';
 
 interface MagicCodeEmailProps {
   code: string;
@@ -53,9 +53,9 @@ const MagicCodeEmail = ({ code }: MagicCodeEmailProps) => {
 
 setupForPreview(MagicCodeEmail, {
   code: {
-    type: "text",
-    defaultValue: "544432"
-  }
+    type: 'text',
+    defaultValue: '544432',
+  },
 });
 
 export default MagicCodeEmail;
