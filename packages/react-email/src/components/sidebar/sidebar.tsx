@@ -1,45 +1,217 @@
 'use client';
 
-import * as Collapsible from '@radix-ui/react-collapsible';
-import * as React from 'react';
+import * as Tabs from '@radix-ui/react-tabs';
+import { clsx } from 'clsx';
+import { motion } from 'framer-motion';
+import Lottie from 'lottie-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import type * as React from 'react';
+import animatedLinkIcon from '../../animated-icons-data/link.json';
+import animatedMailIcon from '../../animated-icons-data/mail.json';
 import { useEmails } from '../../contexts/emails';
+import { useIconAnimation } from '../../hooks/use-icon-animation';
 import { cn } from '../../utils';
-import { Logo } from '../logo';
-import { SidebarDirectoryChildren } from './sidebar-directory-children';
+import { Heading } from '../heading';
+import { Tooltip } from '../tooltip';
+import { FileTree } from './file-tree';
+import { LinkChecker } from './link-checker';
 
 interface SidebarProps {
   className?: string;
   currentEmailOpenSlug?: string;
+  markup?: string;
   style?: React.CSSProperties;
 }
+
+interface SidebarTabTriggerProps {
+  className?: string;
+  children?: React.ReactNode;
+  disabled?: boolean;
+  tabValue: SidebarPanelValue;
+  activeTabValue: SidebarPanelValue;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+}
+
+interface SidebarPanelProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+type SidebarPanelValue = 'file-tree' | 'link-checker' | 'image-checker';
+
+const SidebarTabTrigger = ({
+  children,
+  className,
+  tabValue,
+  disabled,
+  activeTabValue,
+  onMouseEnter,
+  onMouseLeave,
+}: SidebarTabTriggerProps) => {
+  const isActive = tabValue === activeTabValue;
+
+  return (
+    <Tooltip.Provider>
+      <Tooltip>
+        <Tooltip.Trigger asChild>
+          <Tabs.Trigger
+            className={clsx(
+              'group relative aspect-square w-full cursor-pointer text-slate-12 transition-colors duration-150 ease-[cubic-bezier(.36,.66,.6,1)] disabled:cursor-not-allowed disabled:bg-slate-2 disabled:text-slate-10',
+              className,
+              {
+                'bg-slate-6': isActive,
+              },
+            )}
+            data-active={isActive}
+            disabled={disabled}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            value={tabValue}
+          >
+            {isActive ? (
+              <motion.div
+                className="absolute left-0 top-0 h-full w-1 bg-[#0BB9CD] transition-colors duration-300 ease-[bezier(.36,.66,.6,1)]"
+                layoutId="sidebar-active-tab"
+                transition={{ type: 'spring', bounce: 0.12, duration: 0.6 }}
+              />
+            ) : null}
+            <div
+              aria-hidden
+              className={clsx(
+                'pointer-events-none absolute inset-0 flex items-center justify-center pl-1 transition-opacity duration-150 ease-in',
+                {
+                  'opacity-30 group-hover:opacity-60': !isActive,
+                },
+              )}
+            >
+              {children}
+            </div>
+          </Tabs.Trigger>
+        </Tooltip.Trigger>
+        <Tooltip.Content side="bottom">
+          {disabled ? 'Select a file first to use this feature' : null}
+
+          {!disabled && tabValue === 'link-checker' ? 'Link Checker' : null}
+
+          {!disabled && tabValue === 'file-tree' ? 'File explorer' : null}
+        </Tooltip.Content>
+      </Tooltip>
+    </Tooltip.Provider>
+  );
+};
+
+const SidebarPanel = ({ title, children }: SidebarPanelProps) => (
+  <>
+    <div className="hidden min-h-[3.3125rem] flex-shrink items-center border-b border-slate-6 p-3 pl-3.5 lg:flex">
+      <Heading as="h2" className="truncate" size="2" weight="medium">
+        {title}
+      </Heading>
+    </div>
+    <div className="h-[calc(100vh-4.375rem)] w-full px-3 pb-3">{children}</div>
+  </>
+);
 
 export const Sidebar = ({
   className,
   currentEmailOpenSlug,
+  markup: emailMarkup,
   style,
 }: SidebarProps) => {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activePanelValue = (searchParams.get('sidebar-panel') ??
+    'file-tree') as SidebarPanelValue;
+
+  const setActivePanelValue = (newValue: SidebarPanelValue) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('sidebar-panel', newValue);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   const { emailsDirectoryMetadata } = useEmails();
+  const {
+    ref: mailIconRef,
+    onMouseEnter: onMailEnter,
+    onMouseLeave: onMailLeave,
+  } = useIconAnimation();
+
+  const {
+    ref: linkIconRef,
+    onMouseEnter: onLinkEnter,
+    onMouseLeave: onLinkLeave,
+  } = useIconAnimation();
 
   return (
-    <aside
-      className={cn('border-r flex flex-col border-slate-6', className)}
-      style={{ ...style }}
+    <Tabs.Root
+      asChild
+      onValueChange={(v) => {
+        setActivePanelValue(v as SidebarPanelValue);
+      }}
+      orientation="vertical"
+      value={activePanelValue}
     >
-      <div className="p-4 h-[70px] flex-shrink items-center hidden lg:flex">
-        <Logo />
-      </div>
-      <nav className="p-4 flex-grow lg:pt-0 pl-0 w-screen h-[calc(100vh_-_70px)] lg:w-full lg:min-w-[275px] lg:max-w-[275px] flex flex-col overflow-y-auto">
-        <Collapsible.Root open>
-          <React.Suspense>
-            <SidebarDirectoryChildren
-              currentEmailOpenSlug={currentEmailOpenSlug}
-              emailsDirectoryMetadata={emailsDirectoryMetadata}
-              isRoot
-              open
+      <aside
+        className={cn(
+          'grid h-screen grid-cols-[3.375rem,1fr] overflow-hidden bg-black',
+          className,
+        )}
+        style={{ ...style }}
+      >
+        <Tabs.List className="flex h-full flex-col border-r border-slate-6">
+          <SidebarTabTrigger
+            activeTabValue={activePanelValue}
+            onMouseEnter={onMailEnter}
+            onMouseLeave={onMailLeave}
+            tabValue="file-tree"
+          >
+            <Lottie
+              animationData={animatedMailIcon as object}
+              autoPlay={false}
+              className="h-5 w-5"
+              loop={false}
+              lottieRef={mailIconRef}
             />
-          </React.Suspense>
-        </Collapsible.Root>
-      </nav>
-    </aside>
+          </SidebarTabTrigger>
+          <SidebarTabTrigger
+            activeTabValue={activePanelValue}
+            className="relative"
+            disabled={currentEmailOpenSlug === undefined}
+            onMouseEnter={onLinkEnter}
+            onMouseLeave={onLinkLeave}
+            tabValue="link-checker"
+          >
+            <Lottie
+              animationData={animatedLinkIcon as object}
+              autoPlay={false}
+              className="h-6 w-6"
+              loop={false}
+              lottieRef={linkIconRef}
+            />
+          </SidebarTabTrigger>
+        </Tabs.List>
+        <div className="flex flex-col border-r border-slate-6">
+          {activePanelValue === 'link-checker' &&
+          currentEmailOpenSlug &&
+          emailMarkup ? (
+            <SidebarPanel title="React Email - Link Checker">
+              <LinkChecker
+                emailMarkup={emailMarkup}
+                emailSlug={currentEmailOpenSlug}
+              />
+            </SidebarPanel>
+          ) : null}
+          {activePanelValue === 'file-tree' ? (
+            <SidebarPanel title="React Email - File Explorer">
+              <FileTree
+                currentEmailOpenSlug={currentEmailOpenSlug}
+                emailsDirectoryMetadata={emailsDirectoryMetadata}
+              />
+            </SidebarPanel>
+          ) : null}
+        </div>
+      </aside>
+    </Tabs.Root>
   );
 };
